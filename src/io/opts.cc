@@ -730,7 +730,7 @@ int	opts::parse(char*l,char*r) {
 	}
 	else if (!strcmp(l,"-fb_definition")) { if(r) strcpy(fb_definition,r); }
 	else if (!strcmp(l,"-vad") && r) {
-		if (!strcmp(r, "lpc")) strcpy(vadmode,"lpc");
+		if (!strcmp(r, "burg")) strcpy(vadmode,"burg");
 		else if (strstr(r,"file=") != NULL) {
 			char*next = strchr(r,'='); 
 			r[next-r]=0;
