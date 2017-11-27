@@ -113,6 +113,7 @@ class opts {
         int vad_lpc_coefs;                  // number of LPC cepstral coefficients
 
         double vad_absolute_thr;            // absolute threshold placement
+        int vad_perc_init;                  // number of initial segments when criterial value is not confident
         double vad_perc_thr;                // percentual threshold placement
 
         int vad_adapt_init;                 // number of voiceless init segments for adaptive threshold
@@ -120,12 +121,14 @@ class opts {
         double vad_adapt_za;                // speech to background distance parameter za
 
         int vad_dyn_init;
-        double vad_dyn_perc;
+        double vad_dyn_perc;                // vad dynamic threshold percentrual placement
         double vad_dyn_min;
         double vad_dyn_qmaxinc;
         double vad_dyn_qmaxdec;
         double vad_dyn_qmindec;
         double vad_dyn_qmininc;
+
+        int vad_filter_order;               // vad output median filter order
 
  	// Misc.
 	int window;							// window length in samples (will be computed)

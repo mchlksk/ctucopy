@@ -32,6 +32,8 @@
     }
 //-------------------------
 
+//------------------------------------------------------------------------------
+
 class FileWriter {
   private:
     char buff[PATH_MAX];
@@ -61,6 +63,45 @@ class FileWriter {
 
     void write(double D) {
         fwrite((void*)&D, sizeof(D), 1, fp);
+    }
+};
+
+//------------------------------------------------------------------------------
+
+class medianFilter {
+
+private:
+    const int order;
+    bool *history;
+    unsigned int idx;
+
+public:
+    medianFilter(int ORDER) :
+      order(ORDER)
+    {
+        if(order < 1)
+            throw("medianFilter: ORDER must be 1 or greater!");
+
+        history = new bool[order];
+        for(int i=0; i<order; i++)
+            history[i] = false;
+        idx = 0;
+    }
+
+    ~medianFilter()
+    {
+        delete[] history;
+    }
+
+    bool push(bool value)
+    {
+        history[idx] = value;
+        idx = (idx+1) % order;
+        double sum = 0.0;
+        for(int i=0; i<order; i++)
+            sum += (history[i]) ? 1.0 : 0.0;
+
+        return ((sum/double(order)) >= 0.5);
     }
 };
 
@@ -115,13 +156,17 @@ class VAD {
 private:
         const char *opt_apply_mode;
         const char *opt_out_mode;
+        const int opt_filter_order;
         Vec<double> * const xsabsvec; // for silence_frame()
 
         VADcri* vadcri;
         VADthr* vadthr;
+        medianFilter *vadfilter;
 
+        bool vad0; // unfiltered vad
         bool vad;
 
+        FileWriter *file_vad0;
         FileWriter *file_vad;
 
         int frame_index;

@@ -24,7 +24,6 @@
 
 #include "vad.h"
 
-// TODO
 #include "../vdet/CepstralDet.h"
 using namespace Voice;
 
@@ -344,6 +343,7 @@ void VADthr_absolute::save_frame(int frame_index) {
 class VADthr_perc : public VADthr {
        private:
             const double opt_thr;
+            const double opt_init;
             double crimin, crimax;
             double thr;
 
@@ -361,7 +361,8 @@ class VADthr_perc : public VADthr {
 
 VADthr_perc::VADthr_perc(const opts* options)
 : VADthr(options),
-  opt_thr(options->vad_perc_thr)
+  opt_thr(options->vad_perc_thr),
+  opt_init(options->vad_perc_init)
 {
     file_crimin = NULL;
     file_crimax = NULL;
@@ -385,7 +386,7 @@ void VADthr_perc::new_file(const char* filename) {
 };
 
 bool VADthr_perc::process_frame(int frame_index, double cri) {
-    if(frame_index == 0)
+    if(frame_index == 0 || frame_index < opt_init)
     {
       crimin = cri;
       crimax = cri;
@@ -642,8 +643,10 @@ void VADthr_dyn::save_frame(int frame_index)
 VAD::VAD(const opts* options, Vec<double> *Xsabs, Vec<double> *Xsph, Vec<double> *InFvec, Vec<double> *FeaFvec)
 :   opt_apply_mode(options->vad_apply_mode),
     opt_out_mode(options->vad_out_mode),
+    opt_filter_order(options->vad_filter_order),
     xsabsvec(Xsabs)
 {
+    file_vad0 = NULL;
     file_vad = NULL;
 
     if(CRI_MODE_ENERGY(options->vad_cri_mode)) vadcri = new VADcri_energy(options, Xsabs, Xsph, InFvec, FeaFvec);
@@ -655,12 +658,16 @@ VAD::VAD(const opts* options, Vec<double> *Xsabs, Vec<double> *Xsph, Vec<double>
     else if(THR_MODE_ADAPT(options->vad_thr_mode)) vadthr = new VADthr_adapt(options);
     else if(THR_MODE_DYN(options->vad_thr_mode)) vadthr = new VADthr_dyn(options);
     else throw("VAD: unknown vad_thr_mode!");
+
+    vadfilter = new medianFilter(opt_filter_order);
 };
 
 VAD::~VAD() {
+    DELETE(file_vad0)
     DELETE(file_vad)
     delete vadcri;
     delete vadthr;
+    DELETE(vadfilter);
 };
 
 void VAD::new_file(const char *filename) {
@@ -677,17 +684,24 @@ void VAD::new_file(const char *filename) {
 
     if(OUT_MODE_DEBUG(opt_out_mode))
     {
+        DELETE(file_vad0);
+        file_vad0 = new FileWriter(filename, "vad0");
+
         vadcri->new_file(filename);
         vadthr->new_file(filename);
     }
+
+    DELETE(vadfilter);
+    vadfilter = new medianFilter(opt_filter_order);
 };
 
 bool VAD::process_frame() {
     double cri;
 
     cri = vadcri->process_frame(frame_index);
-    vad = vadthr->process_frame(frame_index, cri);
-    vadcri->consume_vad(frame_index, vad);
+    vad0 = vadthr->process_frame(frame_index, cri);
+    vadcri->consume_vad(frame_index, vad0);
+    vad = vadfilter->push(vad0);
 
     frame_index++;
     return vad;
@@ -701,6 +715,7 @@ void VAD::save_frame() {
 
     if(OUT_MODE_DEBUG(opt_out_mode))
     {
+        file_vad0->write(vad0);
         vadcri->save_frame(frame_index);
         vadthr->save_frame(frame_index);
     }
@@ -721,4 +736,3 @@ bool VAD::drop_frame() {
     return (!vad && APPLY_MODE_DROP(opt_apply_mode));
 
 };
-

@@ -122,6 +122,7 @@ opts::opts(int& argc, char **&argv, char *_version) {
         vad_lpc_coefs = 14;
 
 	vad_absolute_thr = 1.0; // TODO default value
+        vad_perc_init = 10;
 	vad_perc_thr = 50.0;
 
         vad_adapt_init = 20;
@@ -135,6 +136,8 @@ opts::opts(int& argc, char **&argv, char *_version) {
         vad_dyn_qmaxdec = 0.995;
         vad_dyn_qmindec = 0.8;
         vad_dyn_qmininc = 0.9999;
+
+        vad_filter_order = 1;
 
  	// Misc.
  	verbose = false;
@@ -420,6 +423,7 @@ void opts::settings() {
 		 << "\tnumber of LPC cepstral coefficients  = " << vad_lpc_coefs << endl
 		 << "\t-- VAD thresholding method           = " << vad_thr_mode << endl
 		 << "\tabsolute threshold placement         = " << vad_absolute_thr << endl
+		 << "\tinit segments for perc. threshold    = " << vad_perc_init << endl
 		 << "\tpercentual threshold placement       = " << vad_perc_thr << endl
 		 << "\tadaptive threshold init (voiceless) segments = " << vad_adapt_init << endl
 		 << "\tadaptive threshold smoothness q      = " << vad_adapt_q << endl
@@ -431,6 +435,7 @@ void opts::settings() {
 		 << "\tsmoothness of decreasing dynamic maximum = " << vad_dyn_qmaxdec << endl
 		 << "\tsmoothness of decreasing dynamic minimum = " << vad_dyn_qmindec << endl
 		 << "\tsmoothness of increasing dynamic minimum = " << vad_dyn_qmininc << endl
+                 << "\tvad output median filter order           = " << vad_filter_order << endl
 		 << "- Miscellaneous:" << endl
 		 << "\tverbose                              = " << _bool[verbose] << endl
 		 << "\tquiet mode                           = " << _bool[quiet] << endl
@@ -600,19 +605,22 @@ void opts::usage() {
              << "                         dyn      - adaptive threshold based on criterial function dynamic " << endl
              << endl
              << "    -vad_absolute_thr <double>  - absolute threshold placement                      <TODO>" << endl
+             << "    -vad_perc_init <int>        - init segments for perc. threshold                 <10.0>" << endl
              << "    -vad_perc_thr  <double>     - percentual threshold placement                    <50.0>" << endl
              << endl
              << "    -vad_adapt_init  <int>  - voiceless init segments for adaptive threshold        <20>" << endl
              << "    -vad_adapt_q  <double>  - adaptive threshold smoothness q                       <0.9>" << endl
              << "    -vad_adapt_za <double>  - speech-to-background parameter z_alpha                <2.0>" << endl
              << endl
-             << "    -vad_dyn_init   <int>     - voiceless init segments for dynamic threshold       <5>" << endl
-             << "    -vad_dyn_perc   <double>  - threshold placement in dynamic range (percentual)   <50.0>" << endl
-             << "    -vad_dyn_min    <double>  - dynamic range minimum                               <TODO>" << endl
+             << "    -vad_dyn_init    <int>    - voiceless init segments for dynamic threshold       <5>" << endl
+             << "    -vad_dyn_perc    <double> - threshold placement in dynamic range (percentual)   <50.0>" << endl
+             << "    -vad_dyn_min     <double> - dynamic range minimum                               <TODO>" << endl
              << "    -vad_dyn_qmaxinc <double> - smoothness of increasing dynamic maximum            <0.8>" << endl
              << "    -vad_dyn_qmaxdec <double> - smoothness of decreasing dynamic maximum            <0.995>" << endl
              << "    -vad_dyn_qmindec <double> - smoothness of decreasing dynamic minimum            <0.8>" << endl
              << "    -vad_dyn_qmininc <double> - smoothness of increasing dynamic minimum            <0.9999>" << endl
+             << endl
+             << "    -vad_filter_order <int>   - vad output filter order                             <1>" << endl
              << endl
          << "  PRESETS:                                                                              " << endl
 	     << "    -preset <type>          - apply a preset to the above options. Use -v option  <user>" << endl
@@ -810,6 +818,7 @@ int	opts::parse(char*l,char*r) {
 	else if (!strcmp(l,"-vad_cepdist_init")) { if(r) vad_cepdist_init = atoi(r); }
 	else if (!strcmp(l,"-vad_lpc_coefs"))   { if(r) vad_lpc_coefs = atoi(r); }
 	else if (!strcmp(l,"-vad_absolute_thr"))  { if(r) vad_absolute_thr = atof(r); }
+	else if (!strcmp(l,"-vad_perc_init"))  { if(r) vad_perc_init = atoi(r); }
 	else if (!strcmp(l,"-vad_perc_thr"))  { if(r) vad_perc_thr = atof(r); }
 	else if (!strcmp(l,"-vad_adapt_init"))  { if(r) vad_adapt_init = atoi(r); }
 	else if (!strcmp(l,"-vad_adapt_q"))     { if(r) vad_adapt_q = atof(r); }
@@ -821,6 +830,7 @@ int	opts::parse(char*l,char*r) {
 	else if (!strcmp(l,"-vad_dyn_qmaxdec")) { if(r) vad_dyn_qmaxdec = atof(r); }
 	else if (!strcmp(l,"-vad_dyn_qmindec")) { if(r) vad_dyn_qmindec = atof(r); }
 	else if (!strcmp(l,"-vad_dyn_qmininc")) { if(r) vad_dyn_qmininc = atof(r); }
+	else if (!strcmp(l,"-vad_filter_order")){ if(r) vad_filter_order = atoi(r); }
 // VAD END ---------------------------------------------------------------------
 
 	else if (!strcmp(l,"-preset")) 		{ if(r) {strcpy(preset,r);set_preset();}}
