@@ -115,7 +115,6 @@ opts::opts(int& argc, char **&argv, char *_version) {
         vad_energy_db = true;
 
         strcpy(vad_cepdist_mode, "lpc");
-        vad_cepdist_db = true;
         vad_cepdist_p = 0.8;
         vad_cepdist_init = 4;
 
@@ -137,7 +136,7 @@ opts::opts(int& argc, char **&argv, char *_version) {
         vad_dyn_qmindec = 0.8;
         vad_dyn_qmininc = 0.9999;
 
-        vad_filter_order = 1;
+        vad_filter_order = 3;
 
  	// Misc.
  	verbose = false;
@@ -417,7 +416,6 @@ void opts::settings() {
 		 << "\t-- VAD criterial function            = " << vad_cri_mode << endl
 		 << "\tnormalize energy in decibels         = " << _bool[vad_energy_db] << endl
                  << "\tcepstral distance mode               = " << vad_cepdist_mode << endl
-		 << "\tnormalize cepstral distance in decibels = " << _bool[vad_cepdist_db] << endl
 		 << "\tsmoothness of cepstral background estimation p = " << vad_cepdist_p << endl
 		 << "\tinit voiceless segments for cepstral background estimation = " << vad_cepdist_init << endl
 		 << "\tnumber of LPC cepstral coefficients  = " << vad_lpc_coefs << endl
@@ -593,7 +591,6 @@ void opts::usage() {
              << "               mode    = lpc - VAD internal LPC cepstrum estimator                  " << endl
              << "                         fea - features computed inside fea module                  " << endl
              << "                         in  - input features (if input is HTK feature file)        " << endl
-             << "    -vad_cepdist_db <on|off> - normalize cepstral distance in decibels              <on>" << endl
              << "    -vad_cepdist_p      <double> - smoothness of cepstral background estimation     <0.8>" << endl
              << "    -vad_cepdist_init   <int>    - init segments for cepstral background            <4>" << endl
              << "    -vad_lpc_coefs <int>     - number of LPC cepstral coefficients                  <14>" << endl
@@ -620,7 +617,7 @@ void opts::usage() {
              << "    -vad_dyn_qmindec <double> - smoothness of decreasing dynamic minimum            <0.8>" << endl
              << "    -vad_dyn_qmininc <double> - smoothness of increasing dynamic minimum            <0.9999>" << endl
              << endl
-             << "    -vad_filter_order <int>   - vad output filter order                             <1>" << endl
+             << "    -vad_filter_order <int>   - vad output filter order                             <3>" << endl
              << endl
          << "  PRESETS:                                                                              " << endl
 	     << "    -preset <type>          - apply a preset to the above options. Use -v option  <user>" << endl
@@ -810,10 +807,6 @@ int	opts::parse(char*l,char*r) {
 		else if (!strcmp(r,"off")) vad_energy_db = false;
 	}
         else if (!strcmp(l,"-vad_cepdist_mode")) { if(r) strcpy(vad_cepdist_mode,r); }
-	else if (!strcmp(l,"-vad_cepdist_db") && r) {
-		if (!strcmp(r,"on")) vad_cepdist_db = true;
-		else if (!strcmp(r,"off")) vad_cepdist_db = false;
-	}
 	else if (!strcmp(l,"-vad_cepdist_p"))   { if(r) vad_cepdist_p = atof(r); }
 	else if (!strcmp(l,"-vad_cepdist_init")) { if(r) vad_cepdist_init = atoi(r); }
 	else if (!strcmp(l,"-vad_lpc_coefs"))   { if(r) vad_lpc_coefs = atoi(r); }

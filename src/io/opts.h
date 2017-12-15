@@ -106,7 +106,6 @@ class opts {
         bool vad_energy_db;                 // normalize energy in decibels
 
         char vad_cepdist_mode[39];          // cepstral distance mode
-        bool vad_cepdist_db;                // normalize cepstral distance in decibels
         double vad_cepdist_p;               // cepstral background estimation smoothness
         int vad_cepdist_init;               // number of segments to force updating cepstral background estimation
 

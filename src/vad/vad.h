@@ -40,14 +40,19 @@ class FileWriter {
     FILE *fp;
 
   public:
-    FileWriter(const char* filename, const char* suffix)
+    FileWriter(const char* filename, const char* suffix = NULL)
     {
-        if(suffix) 
-            snprintf(buff, sizeof(buff), "%s_%s", filename, suffix);
-        else
-            strncpy(buff, filename, sizeof(buff));
+        const char* ptr;
 
-        if(!(fp = fopen(buff, "wb")))
+        if(suffix != NULL)
+        {
+            snprintf(buff, sizeof(buff), "%s_%s", filename, suffix);
+            ptr = &buff[0];
+        }
+        else
+            ptr = filename;
+
+        if(!(fp = fopen(ptr, "wb")))
             throw("FileWriter: cannot open file!");
     }
 
@@ -73,19 +78,19 @@ class medianFilter {
 private:
     const int order;
     bool *history;
-    unsigned int idx;
+    unsigned int historyIdx;
+    unsigned int historySize;
 
 public:
     medianFilter(int ORDER) :
       order(ORDER)
     {
-        if(order < 1)
-            throw("medianFilter: ORDER must be 1 or greater!");
+        if(order < 1 || (order % 2) == 0)
+            throw("medianFilter: filter order must be positive, odd number!");
 
         history = new bool[order];
-        for(int i=0; i<order; i++)
-            history[i] = false;
-        idx = 0;
+        historyIdx = 0;
+        historySize = 0;
     }
 
     ~medianFilter()
@@ -95,13 +100,15 @@ public:
 
     bool push(bool value)
     {
-        history[idx] = value;
-        idx = (idx+1) % order;
+        history[historyIdx] = value;
+        historyIdx = (historyIdx+1) % order;
+        if (historySize < order)
+            historySize++;
         double sum = 0.0;
-        for(int i=0; i<order; i++)
+        for(int i=0; i<historySize; i++)
             sum += (history[i]) ? 1.0 : 0.0;
 
-        return ((sum/double(order)) >= 0.5);
+        return ((sum/double(historySize)) >= 0.5);
     }
 };
 

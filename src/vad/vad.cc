@@ -52,7 +52,7 @@ using namespace Voice;
 
 inline double DB(double x)
 {
-    return 20.0d*log10(std::numeric_limits<double>::min()+x);
+    return 10.0d*log10(std::numeric_limits<double>::min()+x);
 }
 
 // -----------------------------------------------------------------------------
@@ -117,7 +117,6 @@ void VADcri_energy::consume_vad(int frame_index, bool vad)
 class VADcri_cepdist : public VADcri {
     private:
         const char *opt_mode;
-        const bool opt_db;
         const double opt_p;
         const int opt_init;
         const int opt_lpc_coefs;
@@ -149,7 +148,6 @@ class VADcri_cepdist : public VADcri {
 VADcri_cepdist::VADcri_cepdist(const opts* options, Vec<double> *Xsabs, Vec<double> *Xsph, Vec<double> *InFvec, Vec<double> *FeaFvec)
 : VADcri(options, Xsabs, Xsph, InFvec, FeaFvec),
   opt_mode(options->vad_cepdist_mode),
-  opt_db(options->vad_cepdist_db),
   opt_p(options->vad_cepdist_p),
   opt_init(options->vad_cepdist_init),
   opt_lpc_coefs(options->vad_lpc_coefs),
@@ -272,9 +270,6 @@ double VADcri_cepdist::process_frame(int frame_index)
             sum += (ci[i]-c0[i])*(ci[i]-c0[i]);
         dist = 4.3429 * sqrt(2*sum);
     }
-
-    if(opt_db)
-        dist = DB(dist);
 
     return dist;
 };
@@ -680,7 +675,7 @@ void VAD::new_file(const char *filename) {
         throw("VAD::new_file(): invalid filename!");
 
     DELETE(file_vad);
-    file_vad = new FileWriter(filename, NULL);   
+    file_vad = new FileWriter(filename);   
 
     if(OUT_MODE_DEBUG(opt_out_mode))
     {
